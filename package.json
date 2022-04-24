@@ -1,0 +1,19 @@
+{
+  "name": "whatsapp-helper-2.0",
+  "version": "0.0.1",
+  "description": "This Project is to help my mom by automating the process of daily reporting",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server",
+    "dev": "nodemon server"
+  },
+  "type": "module",
+  "dependencies": {
+    "body-parser": "^1.20.0",
+    "express": "^4.17.3",
+    "nodemon": "^2.0.15",
+    "qrcode-terminal": "^0.12.0",
+    "react": "^18.0.0",
+    "whatsapp-web.js": "^1.16.6"
+  }
+}
