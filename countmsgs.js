@@ -1,11 +1,19 @@
-import bankList from "./banklist.js";
+import banklist from "";
 
 const today = new Date();
 const day = today.getDate();
 const month = today.getMonth();
 const year = today.getFullYear();
+const bankList = banklist;
 const smonth = parseInt(month) + 1;
-const initialMessage =
+
+let errorMessage = "";
+let todaysMsgs = [];
+let report = {
+  todaysMsg: "",
+  errorMsgs: [],
+};
+let finalMessage =
   "Date: " +
   day +
   "/" +
@@ -13,17 +21,13 @@ const initialMessage =
   "/" +
   year +
   "\n" +
-  "Sir, The following branches did not report today\n";
+  "The following branches did not report today\n";
 
-const countmsgs = async (chats) => {
- try{
-    let todaysMsgs = [];
-    let finalMessage = initialMessage;
-    const reqGroup = chats.find((chat) => chat.name == "<request group>");
-    let date = new Date();
-    const msgs = await reqGroup.fetchMessages({ limit: 10 });
-    msgs.forEach((msg) => {
-      date = new Date(msg.timestamp * 1000);
+const foo = async (msgs) => {
+  try {
+    console.log("Getting todays report...");
+    await msgs.forEach((msg) => {
+      const date = new Date(msg.timestamp * 1000);
 
       if (
         date.getDate() == day &&
@@ -35,7 +39,7 @@ const countmsgs = async (chats) => {
     });
 
     todaysMsgs.forEach((msg) => {
-      date = new Date(msg.timestamp * 1000);
+      const date = new Date(msg.timestamp * 1000);
       const branch = bankList.find((elem) => {
         if (
           elem.manager == msg.author.substring(2, 12) &&
@@ -59,11 +63,7 @@ const countmsgs = async (chats) => {
     });
 
     console.log(finalMessage);
-    const myself = chats.find((chat) => chat.name == "<On which msg will be sent>");
-       client.sendMessage(
-           myself.id._serialized,
-           finalMessage
-       );
+    report.todaysMsg = finalMessage;
     let isOld;
     todaysMsgs.forEach(async (todaysmsg) => {
       isOld = false;
@@ -80,16 +80,13 @@ const countmsgs = async (chats) => {
           todaysmsg.author.substring(2, 12) +
           "\n" +
           todaysmsg.body;
-        client.sendMessage(
-            myself.id._serialized,
-            errorMessage
-        )
+        report.errorMsgs.push(errorMessage);
       }
-      return finalMessage;
     });
- }catch(e){
-     console.log(e);
- }
-}
+    return report;
+  } catch (err) {
+    console.error(err);
+  }
+};
 
-export default countmsgs;
+export default foo;

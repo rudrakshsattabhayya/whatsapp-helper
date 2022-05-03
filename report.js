@@ -1,38 +1,42 @@
 import qrcode from "qrcode-terminal";
 import pkg from "whatsapp-web.js";
-import countmsgs from "./countmsgs.js";
+import foo from "./countmsgs.js";
+
 const { Client, LocalAuth } = pkg;
 
-let finalmsg="Request Recieved!";
-
 const GetWhatsappMsgs = async () => {
-  try {
-    console.log("Request Recieved!");
+  console.log("Request Recieved!");
 
-    const client = new Client({
-      authStrategy: new LocalAuth(),
-    });
+  const client = new Client({
+    authStrategy: new LocalAuth(),
+  });
+  client.initialize();
 
-    client.initialize();
+  client.on("qr", (qr) => {
+    console.log("Scan the QR Code!");
+    qrcode.generate(qr, { small: true });
+  });
 
-    client.on("qr", (qr) => {
-      qrcode.generate(qr, { small: true });
-    });
-
-    const foo = async () => {
-      console.log("Getting todays report...");
+  const func = async () => {
+    try {
       const chats = await client.getChats();
-      finalmsg = await countmsgs(chats);
-      client.destroy();
-      return finalmsg;
-    };
-    
-    client.on("ready", foo);
-    console.log(x);
-    return finalmsg;
-  } catch (e) {
-    console.log(e);
-  }
+      const reqGroup = chats.find((chat) => chat.name == "<Input Group>");
+      const msgs = await reqGroup.fetchMessages({ limit: 400 });
+      const myself = chats.find((chat) => chat.name == "<Output Group>");
+      const report = await foo(msgs);
+      const errorMsgs = report.errorMsgs;
+      client.sendMessage(myself.id._serialized, report.todaysMsg);
+      errorMsgs.forEach((errmsg, index) => {
+        client.sendMessage(myself.id._serialized, errmsg);
+        console.log(index);
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  client.on("ready", func);
+  return "Request Recived!";
 };
 
-export default GetWhatsappMsgs;
+export { GetWhatsappMsgs };
