@@ -1,40 +1,45 @@
-import banklist from "";
+import banklist from "./banklist.js";
 
-const today = new Date();
-const day = today.getDate();
-const month = today.getMonth();
-const year = today.getFullYear();
-const bankList = banklist;
-const smonth = parseInt(month) + 1;
-
-let errorMessage = "";
-let todaysMsgs = [];
-let report = {
-  todaysMsg: "",
-  errorMsgs: [],
-};
-let finalMessage =
-  "Date: " +
-  day +
-  "/" +
-  smonth +
-  "/" +
-  year +
-  "\n" +
-  "The following branches did not report today\n";
-
-const foo = async (msgs) => {
+const foo = async (msgs, time) => {
   try {
-    console.log("Getting todays report...");
+    const today = new Date();
+    const day = today.getDate();
+    const month = today.getMonth();
+    const year = today.getFullYear();
+    const bankList = banklist;
+    const smonth = parseInt(month) + 1;
+
+    let errorMessage = "";
+    let todaysMsgs = [];
+    let report = {
+      todaysMsg: "",
+      errorMsgs: [],
+    };
+    let finalMessage =
+      "Date: " +
+      day +
+      "/" +
+      smonth +
+      "/" +
+      year +
+      "\n" +
+      "Sir, The following branches did not report today\n";
+
     await msgs.forEach((msg) => {
       const date = new Date(msg.timestamp * 1000);
-
       if (
         date.getDate() == day &&
         date.getMonth() == month &&
-        date.getFullYear() == year
+        date.getFullYear() == year &&
+        date.getHours() >= parseInt(time.hours)
       ) {
-        todaysMsgs.push(msg);
+        if (
+          (date.getHours() === parseInt(time.hours) &&
+            date.getMinutes() >= parseInt(time.mins)) ||
+          date.getHours() > parseInt(time.hours)
+        ) {
+          todaysMsgs.push(msg);
+        }
       }
     });
 
@@ -53,16 +58,19 @@ const foo = async (msgs) => {
       });
     });
 
+    let x = 1;
     bankList.forEach((elem) => {
       if (elem.done === false) {
         finalMessage +=
+          x +
+          ") " +
           elem.branch.charAt(0).toUpperCase() +
           elem.branch.slice(1).toLowerCase() +
           "\n";
+        x += 1;
       }
     });
 
-    console.log(finalMessage);
     report.todaysMsg = finalMessage;
     let isOld;
     todaysMsgs.forEach(async (todaysmsg) => {
@@ -74,7 +82,14 @@ const foo = async (msgs) => {
         }
       });
 
-      if (isOld === false) {
+      const date = new Date(todaysmsg.timestamp * 1000);
+
+      if (
+        isOld === false &&
+        date.getDate() == day &&
+        date.getMonth() == month &&
+        date.getFullYear() == year
+      ) {
         errorMessage =
           "*Error Message*\n" +
           todaysmsg.author.substring(2, 12) +
